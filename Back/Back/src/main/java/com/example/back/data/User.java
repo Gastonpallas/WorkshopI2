@@ -6,7 +6,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class User {
-    public String id;
-    public String username;
-    public boolean isFollower;
+    private String id;
+    private String username;
+    private boolean follower;
 }

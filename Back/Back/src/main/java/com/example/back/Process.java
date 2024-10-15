@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.util.ArrayList;
 import java.util.List;
 import java.net.URI;
 import java.net.http.HttpRequest;
@@ -39,7 +40,7 @@ public class Process {
 
             // Appel à l'API pour récupérer tout les messages -> simulation
             // String instagramMessagesUrl = "https://graph.instagram.com/me/messages?access_token=" + accessToken;
-            String url = "https://a34085de-49ac-4e44-905d-f7907e1849d1.mock.pstmn.io/instagram/messages?token=" + token;
+            String url = "https://79938d12-de45-49b7-95b9-4d5327d3f5ed.mock.pstmn.io/instagram/messages?token=" + token;
 
             // Créer le client HTTP
             HttpClient httpClient = HttpClient.newHttpClient();
@@ -69,8 +70,15 @@ public class Process {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+            ArrayList<Data> dataList = messageResponse.getData();
+            dataList.forEach((data) -> {
 
-            // Filtre sur la date, si c'est abonnée ou pas
+                // Filtre sur la date, si c'est abonnée ou pas
+
+                if(!data.getRecipient().isFollower()){
+                    System.out.println(data.getMessage());
+                }
+            });
 
             // Pour chaque message
 

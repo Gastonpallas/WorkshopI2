@@ -8,6 +8,6 @@ import java.util.ArrayList;
 @Setter
 @Getter
 public class MessageResponse {
-    public ArrayList<Data> data;
-    public Object paging;
+    private ArrayList<Data> data;
+    private Object paging;
 }

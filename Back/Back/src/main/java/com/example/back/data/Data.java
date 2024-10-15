@@ -8,12 +8,12 @@ import java.util.ArrayList;
 @Setter
 @Getter
 public class Data {
-    public String id;
-    public User sender;
-    public User recipient;
-    public String message;
-    public String timestamp;
-    public boolean is_read ;
-    public ArrayList<Attachment> attachments;
+    private String id;
+    private User sender;
+    private User recipient;
+    private String message;
+    private String timestamp;
+    private boolean read ;
+    private ArrayList<Attachment> attachments;
 }
 
