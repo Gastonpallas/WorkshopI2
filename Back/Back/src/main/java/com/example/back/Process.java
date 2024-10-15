@@ -2,10 +2,13 @@ package com.example.back;
 
 import com.example.back.Client.Client;
 import com.example.back.Client.ClientRepository;
+import com.example.back.data.Archive;
+import com.example.back.data.ArchiveRepository;
 import com.example.back.data.Data;
 import com.example.back.data.MessageResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,11 +31,16 @@ import static com.example.back.ApiUrls.*;
 public class Process {
 
     private final ClientRepository clientRepository;
+    private final ArchiveRepository archiveRepository;
+
 
     @Autowired
-    public Process(ClientRepository clientRepository) {
+    public Process(ClientRepository clientRepository, ArchiveRepository archiveRepository) {
         this.clientRepository = clientRepository;
+        this.archiveRepository = archiveRepository;
     }
+
+
 
     public static final LocalDateTime DATE_20_MINUTES_AGO = LocalDateTime.now().minusMinutes(2000000000);
     public static final double ACCEPTED_TOXICITY_SCORE = 0.2;
@@ -65,7 +73,8 @@ public class Process {
                         if (ACCEPTED_TOXICITY_SCORE < toxicityScore) {  // Threshold for toxicity
                             System.out.println("Toxic message detected. Deleting...");
                             deleteMessage(data.getId(), token);  // Delete the message
-                            archiveMessage(data);
+                            archiveMessage(data, toxicityScore, localDate);
+
                         }
 
                         // Log the message
@@ -187,8 +196,24 @@ public class Process {
     /**
      * Archive Message in DB
      *
-     * @param data data to archive
+     * @param data          data to archive
+     * @param toxicityScore is the score from perspective API
+     * @param dateMessage is the date when the message was sent
      */
-    private void archiveMessage(Data data) {
+
+        void archiveMessage(Data data, double toxicityScore, LocalDate dateMessage) {
+        Archive archive = new Archive();
+        archive.setId(data.getId()); // Using message ID as archive ID
+        archive.setIdSender(data.getSender().getId()); // Assuming User class has getId method
+        archive.setIdRecipient(data.getRecipient().getId());
+        archive.setMessage(data.getMessage());
+        archive.setScore(toxicityScore); // Get the toxicity score
+        archive.setDate(dateMessage); // Archive the current date
+
+        archiveRepository.save(archive); // Save the archive to the database
+        System.out.println("Message archived: " + data.getMessage());
     }
+
+
 }
+
