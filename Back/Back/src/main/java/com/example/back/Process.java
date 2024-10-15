@@ -10,6 +10,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.net.URI;
@@ -26,8 +31,12 @@ public class Process {
         this.clientRepository = clientRepository;
     }
 
+    public static final LocalDateTime DATE_20_MINUTES_AGO = LocalDateTime.now().minusMinutes(2000000000);
+
     public void startProcess(){
         System.out.println("test");
+
+
 
         // Récupérer la liste des clients
         List<Client> listeClient = clientRepository.findAll();
@@ -72,21 +81,27 @@ public class Process {
             }
             ArrayList<Data> dataList = messageResponse.getData();
             dataList.forEach((data) -> {
-
+                // Pour chaque message
                 // Filtre sur la date, si c'est abonnée ou pas
+                try {
+                    OffsetDateTime offsetDateTime = OffsetDateTime.parse(data.getTimestamp(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ"));
+                    LocalDate localDate = offsetDateTime.toLocalDate();
 
-                if(!data.getRecipient().isFollower()){
-                    System.out.println(data.getMessage());
+                    if(localDate.isAfter( DATE_20_MINUTES_AGO.toLocalDate()) && !data.getRecipient().isFollower()){
+
+                        // Classer le message grâce à l'IA
+
+                        // SI catégorie A = API instagram pour supprimer, voir bloquer, voir masquer etc.... -> simulation
+
+                        // Historiser les messages
+                    }
+                } catch (DateTimeParseException e) {
+                    System.err.println("Erreur lors de la conversion: " + e.getMessage());
                 }
             });
 
-            // Pour chaque message
 
-            // Classer le message grâce à l'IA
 
-            // SI catégorie A = API instagram pour supprimer, voir bloquer, voir masquer etc.... -> simulation
-
-            // Historiser les messages
         }));
     }
 }
