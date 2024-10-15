@@ -2,6 +2,9 @@ package com.example.back;
 
 import com.example.back.Client.Client;
 import com.example.back.Client.ClientRepository;
+import com.example.back.data.Data;
+import com.example.back.data.MessageResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -57,6 +60,15 @@ public class Process {
 
             // Afficher la réponse
             System.out.println(response.body());
+            // Convertir la réponse JSON en objets Java (POJOs)
+
+            ObjectMapper mapper = new ObjectMapper();
+            MessageResponse messageResponse;
+            try {
+                messageResponse = mapper.readValue(response.body(), MessageResponse.class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
             // Filtre sur la date, si c'est abonnée ou pas
 
