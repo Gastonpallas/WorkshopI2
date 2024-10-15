@@ -10,8 +10,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/process")
 public class ProcessController {
 
-    Process process = new Process();
+    private final Process process;
 
+    @Autowired
+    public ProcessController(Process process) {
+        this.process = process;
+    }
     @PostMapping
     public void process() {
         System.out.println("Process started");
