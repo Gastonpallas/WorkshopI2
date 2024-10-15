@@ -22,6 +22,8 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.back.ApiUrls.*;
+
 @Service
 public class Process {
 
@@ -33,11 +35,12 @@ public class Process {
     }
 
     public static final LocalDateTime DATE_20_MINUTES_AGO = LocalDateTime.now().minusMinutes(2000000000);
+    public static final double ACCEPTED_TOXICITY_SCORE = 0.2;
 
     /**
      * Start process
      */
-    public void startProcess() {
+    public void startProcess(){
 
         // Récupérer la liste des clients
         List<Client> listeClient = clientRepository.findAll();
@@ -54,14 +57,15 @@ public class Process {
                     OffsetDateTime offsetDateTime = OffsetDateTime.parse(data.getTimestamp(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ"));
                     LocalDate localDate = offsetDateTime.toLocalDate();
 
-                    if (localDate.isAfter(DATE_20_MINUTES_AGO.toLocalDate()) && !data.getRecipient().isFollower()) {
+                    if(localDate.isAfter( DATE_20_MINUTES_AGO.toLocalDate()) && !data.getRecipient().isFollower()){
 
                         double toxicityScore = callAPIPerspective(data.getMessage());
 
                         // Check toxicity and delete if necessary
-                        if (toxicityScore > 0.8) {  // Threshold for toxicity
+                        if (ACCEPTED_TOXICITY_SCORE < toxicityScore) {  // Threshold for toxicity
                             System.out.println("Toxic message detected. Deleting...");
                             deleteMessage(data.getId(), token);  // Delete the message
+                            archiveMessage(data);
                         }
 
                         // Log the message
@@ -81,7 +85,7 @@ public class Process {
      * @return List of messages
      */
     private ArrayList<Data> callAPIInstagram(String token) {
-        String url = "https://79938d12-de45-49b7-95b9-4d5327d3f5ed.mock.pstmn.io/instagram/messages?token=" + token;
+        String url = API_GET_MESSAGE + "/instagram/messages?token=" + token;
 
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
@@ -115,9 +119,6 @@ public class Process {
      * @return score
      */
     private double callAPIPerspective(String message) {
-        String apiKey = "AIzaSyDcJrVeCLfX6Pu_Tq1GP8-g0ns1JNPtjUw";
-        String url = "https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=" + apiKey;
-
         String jsonPayload = String.format(
                 "{ \"comment\": { \"text\": \"%s\" }, \"requestedAttributes\": { \"TOXICITY\": {} } }",
                 message
@@ -125,7 +126,7 @@ public class Process {
 
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
+                .uri(URI.create(API_PERSPECTIVE_URL))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                 .build();
@@ -181,6 +182,13 @@ public class Process {
      */
     private void logMessage(Data data, double toxicityScore) {
         System.out.println("Logging message: " + data.getMessage() + " | Toxicity score: " + toxicityScore);
-        // You can add logic to store this data into a database if needed
+    }
+
+    /**
+     * Archive Message in DB
+     *
+     * @param data data to archive
+     */
+    private void archiveMessage(Data data) {
     }
 }
