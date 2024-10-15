@@ -33,6 +33,9 @@ public class Process {
 
     public static final LocalDateTime DATE_20_MINUTES_AGO = LocalDateTime.now().minusMinutes(2000000000);
 
+    /**
+     * Start process
+     */
     public void startProcess(){
 
         // Récupérer la liste des clients
@@ -55,8 +58,13 @@ public class Process {
 
                     if(localDate.isAfter( DATE_20_MINUTES_AGO.toLocalDate()) && !data.getRecipient().isFollower()){
 
-                        // Classer le message grâce à l'IA
-                        callAPIPerspective(data);
+                        double score = callAPIPerspective(data.getMessage());
+
+                        // SI catégorie A = API instagram pour supprimer, voir bloquer, voir masquer etc.... -> simulation
+
+
+                        // Historiser les messages
+
 
                     }
                 } catch (DateTimeParseException e) {
@@ -66,6 +74,12 @@ public class Process {
         }));
     }
 
+    /**
+     * Call API of Instagram to get the list of message
+     *
+     * @param token necessary to log to the API
+     * @return List of messages
+     */
     private ArrayList<Data> callAPIInstagram(String token) {
         // Appel à l'API pour récupérer tout les messages -> simulation
         String url = "https://79938d12-de45-49b7-95b9-4d5327d3f5ed.mock.pstmn.io/instagram/messages?token=" + token;
@@ -100,11 +114,17 @@ public class Process {
         return messageResponse.getData();
     }
 
-    private void callAPIPerspective(Data data) {
-        // SI catégorie A = API instagram pour supprimer, voir bloquer, voir masquer etc.... -> simulation
+    /**
+     * Call API Perspective to get the toxicity score
+     *
+     * @param message message categorized
+     * @return score
+     */
+    private double callAPIPerspective(String message) {
 
-        System.out.println(data.getMessage());
-        // Historiser les messages
+        // Classer le message grâce à l'IA
+        System.out.println(message);
+        return 0.9;
     }
 
 }
