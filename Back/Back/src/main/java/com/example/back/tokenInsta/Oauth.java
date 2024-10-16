@@ -23,7 +23,7 @@ public class Oauth {
     public String getToken(String mail, String pasword) throws Exception {
 
 
-        // GET
+        // GET code
         String fullAuthUrl = authUrl + "?client_id=" + clientId
                 + "&redirect_uri=" + redirectUri
                 + "&scope=" + scope
@@ -33,7 +33,7 @@ public class Oauth {
         String code = restTemplate.getForObject(fullAuthUrl, String.class).toString() ;
 
 
-        // POST
+        // POST get token with code
         String token = callBack.exchangeCodeForAccessToken(code);
 
         return token;
