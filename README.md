@@ -73,3 +73,9 @@ mvn spring-boot:run
 - [**Lombok**](https://projectlombok.org/) - Code generator (getter/setter)
 
 
+The main branch is functional and the dev branch is experimental
+
+
+
+
+
