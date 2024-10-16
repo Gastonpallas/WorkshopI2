@@ -6,6 +6,7 @@ import com.example.back.data.Archive;
 import com.example.back.data.ArchiveRepository;
 import com.example.back.data.Data;
 import com.example.back.data.MessageResponse;
+import com.example.back.tokenInsta.Oauth;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
@@ -32,12 +33,14 @@ public class Process {
 
     private final ClientRepository clientRepository;
     private final ArchiveRepository archiveRepository;
+    private final Oauth oauth;
 
 
     @Autowired
-    public Process(ClientRepository clientRepository, ArchiveRepository archiveRepository) {
+    public Process(ClientRepository clientRepository, ArchiveRepository archiveRepository, Oauth oauth) {
         this.clientRepository = clientRepository;
         this.archiveRepository = archiveRepository;
+        this.oauth = oauth;
     }
 
 
@@ -57,10 +60,16 @@ public class Process {
 
         // Pour chaque Client
         listeClient.forEach((client -> {
-            String token = "token";
+            String token = "test";
+            try {
+                token = oauth.getToken(client.getMail(), client.getPassword());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             ArrayList<Data> dataList = callAPIInstagram(token);
 
+            String finalToken = token;
             dataList.forEach((data) -> {
                 // Filtre sur la date, si c'est abonnée ou pas
                 try {
@@ -76,7 +85,7 @@ public class Process {
                         // Check toxicity and delete if necessary
                         if (ACCEPTED_TOXICITY_SCORE < toxicityScore) {  // Threshold for toxicity
                             System.out.println("Toxic message detected with score: " + toxicityScore + ". Deleting message ID: " + data.getId());;
-                            deleteMessage(data.getId(), token);  // Delete the message
+                            deleteMessage(data.getId(), finalToken);  // Delete the message
                             archiveMessage(data, toxicityScore, localDate);
 
                         }
