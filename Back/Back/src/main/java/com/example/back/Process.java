@@ -52,6 +52,8 @@ public class Process {
 
         // Récupérer la liste des clients
         List<Client> listeClient = clientRepository.findAll();
+        System.out.println("[INFO] Found " + listeClient.size() + " clients");
+
 
         // Pour chaque Client
         listeClient.forEach((client -> {
@@ -67,18 +69,17 @@ public class Process {
 
                     if(localDate.isAfter( DATE_20_MINUTES_AGO.toLocalDate()) && !data.getRecipient().isFollower()){
 
+                        System.out.println("Get toxicity score from Perspective API");
+
                         double toxicityScore = callAPIPerspective(data.getMessage());
 
                         // Check toxicity and delete if necessary
                         if (ACCEPTED_TOXICITY_SCORE < toxicityScore) {  // Threshold for toxicity
-                            System.out.println("Toxic message detected. Deleting...");
+                            System.out.println("Toxic message detected with score: " + toxicityScore + ". Deleting message ID: " + data.getId());;
                             deleteMessage(data.getId(), token);  // Delete the message
                             archiveMessage(data, toxicityScore, localDate);
 
                         }
-
-                        // Log the message
-                        logMessage(data, toxicityScore);
                     }
                 } catch (DateTimeParseException e) {
                     System.err.println("Erreur lors de la conversion: " + e.getMessage());
@@ -108,7 +109,7 @@ public class Process {
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
-
+        System.out.println("Get messages from instagram API");
         System.out.println(response.body());
 
         ObjectMapper mapper = new ObjectMapper();
@@ -163,7 +164,7 @@ public class Process {
      * @param accessToken the token to authenticate the request
      */
     private void deleteMessage(String messageId, String accessToken) {
-        String url = "https://graph.instagram.com/" + messageId + "?access_token=" + accessToken;
+        String url = API_DELETE_MESSAGE + "?access_token=" + accessToken + "?id_message" + messageId;
 
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
@@ -174,6 +175,8 @@ public class Process {
         try {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
+
+                System.out.println("Delete message from instagram API");
                 System.out.println("Message deleted successfully.");
             } else {
                 System.err.println("Failed to delete message: " + response.body());
@@ -183,15 +186,6 @@ public class Process {
         }
     }
 
-    /**
-     * Log the processed message for auditing
-     *
-     * @param data          the message data
-     * @param toxicityScore the toxicity score
-     */
-    private void logMessage(Data data, double toxicityScore) {
-        System.out.println("Logging message: " + data.getMessage() + " | Toxicity score: " + toxicityScore);
-    }
 
     /**
      * Archive Message in DB
@@ -201,7 +195,7 @@ public class Process {
      * @param dateMessage is the date when the message was sent
      */
 
-        void archiveMessage(Data data, double toxicityScore, LocalDate dateMessage) {
+    void archiveMessage(Data data, double toxicityScore, LocalDate dateMessage) {
         Archive archive = new Archive();
         archive.setId(data.getId()); // Using message ID as archive ID
         archive.setIdSender(data.getSender().getId()); // Assuming User class has getId method
